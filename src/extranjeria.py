@@ -44,8 +44,7 @@ def numero_nacionalidades_distintas(registros: list[RegistroExtranjeria]) -> int
     return len(paises)
 
 
-def secciones_distritos_con_extranjeros_nacionalidades(registros: list[RegistroExtranjeria], 
-                                                    / paises: set[str]) -> list[tuple[str,str]]: 
+def secciones_distritos_con_extranjeros_nacionalidades(registros: list[RegistroExtranjeria], paises: set[str]) -> list[tuple[str,str]]: 
     '''recibe una lista de tuplas de tipo RegistroExtranjeria 
     y un conjunto de cadenas con nombres de países, y devuelve 
     una lista de tuplas (distrito, seccion) con los distritos y 
@@ -71,8 +70,11 @@ def total_extranjeros_por_pais(registros: list[RegistroExtranjeria]) -> dict[str
 
     ret = dict()
     for dato in registros:
-        ret[dato.pais] += dato.hombres + dato.mujeres
-    
+        if dato.pais in ret:
+            ret[dato.pais] += dato.hombres + dato.mujeres
+        else:
+            ret[dato.pais] = dato.hombres + dato.mujeres
+        
     return ret
 
 
@@ -83,7 +85,7 @@ def top_n_extranjeria(registros: list[RegistroExtranjeria], n: int = 3) -> list[
     registros pasados como parámetros.'''
 
     paises_poblacion = total_extranjeros_por_pais(registros)
-    mas_poblacion = [(poblacion, pais) for (pais, poblacion) in paises_poblacion]
+    mas_poblacion = [(poblacion, pais) for (pais, poblacion) in paises_poblacion.items()]
     mas_poblacion.sort(reverse=True)
 
     ret = []
@@ -104,9 +106,13 @@ def barrio_mas_multicultural(registros: list[RegistroExtranjeria]) -> str:
 
     paises_barrio = dict()
     for dato in registros:
-        paises_barrio[dato.barrio] += 1
+        if dato.barrio in paises_barrio:
+            paises_barrio[dato.barrio] += 1
+        else:
+            paises_barrio[dato.barrio] = 1
 
-    for barrio, paises in paises_barrio.items:
+
+    for barrio, paises in paises_barrio.items():
         if paises > paises_max:
             paises_max = paises
             barrio_max = barrio
@@ -127,14 +133,22 @@ def barrio_con_mas_extranjeros(registros: list[RegistroExtranjeria], tipo: str =
         personas_barrio = dict()
         for dato in registros:
             if tipo == 'Hombres':
-                personas_barrio[dato.barrio] += dato.hombres
+                if dato.barrio in personas_barrio:
+                    personas_barrio[dato.barrio] += dato.hombres
+                else:
+                    personas_barrio[dato.barrio] = dato.hombres
+
             elif tipo == 'Mujeres':
-                personas_barrio[dato.barrio] += dato.mujeres
+                if dato.barrio in personas_barrio:
+                    personas_barrio[dato.barrio] += dato.mujeres
+                else:
+                    personas_barrio[dato.barrio] = dato.mujeres
+
         
         personas_max = 0
         barrio_max = ""
 
-        for barrio, personas in personas_barrio.items:
+        for barrio, personas in personas_barrio.items():
             if personas > personas_max:
                 personas_max = personas
                 barrio_max = barrio
@@ -151,14 +165,22 @@ def pais_mas_representado_por_distrito(registros: list[RegistroExtranjeria]) -> 
     personas_paises_distrito: dict[str,dict[str,int]] = dict()
 
     for dato in registros:
-        personas_paises_distrito[dato.distrito][dato.pais] += dato.hombres + dato.mujeres
+        if dato.distrito in personas_paises_distrito:
+            if dato.pais in personas_paises_distrito[dato.distrito]:
+                personas_paises_distrito[dato.distrito][dato.pais] += dato.hombres + dato.mujeres
+            else:
+                personas_paises_distrito[dato.distrito][dato.pais] = dato.hombres + dato.mujeres
+        else:
+            personas_paises_distrito[dato.distrito] = dict()
+            personas_paises_distrito[dato.distrito][dato.pais] = dato.hombres + dato.mujeres
+        
 
     ret = dict()
 
-    for distrito, personas_paises in personas_paises_distrito.items:
+    for distrito, personas_paises in personas_paises_distrito.items():
         personas_max = 0
         pais_max = ""
-        for pais, personas in personas_paises.items:
+        for pais, personas in personas_paises.items():
             if personas > personas_max:
                 personas_max = personas
                 pais_max = pais
